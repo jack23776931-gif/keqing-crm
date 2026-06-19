@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#315bea">
+  <meta name="description" content="客情管家云端版">
+  <title>客情管家｜云端客户跟进管理</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <section class="auth-page" id="authPage">
+    <div class="auth-brand">
+      <p class="eyebrow">STORE CRM · CLOUD</p>
+      <h1>客情管家</h1>
+      <p>随时随地登录，客户资料自动同步到手机和电脑。</p>
+      <ul>
+        <li>账号密码安全登录</li>
+        <li>多设备云端同步</li>
+        <li>每个账号数据独立</li>
+      </ul>
+    </div>
+
+    <div class="auth-card">
+      <div id="setupNotice" class="setup-notice hidden">
+        <strong>网站还未连接云数据库</strong>
+        <p>请先按照 SETUP.md 填写 config.js。</p>
+      </div>
+
+      <div class="auth-tabs">
+        <button class="auth-tab active" type="button" data-auth-mode="login">登录</button>
+        <button class="auth-tab" type="button" data-auth-mode="register">注册账号</button>
+      </div>
+
+      <div class="auth-heading">
+        <h2 id="authTitle">欢迎回来</h2>
+        <p id="authDescription">登录后查看你的门店客户</p>
+      </div>
+
+      <form id="authForm">
+        <label class="field">
+          <span>邮箱</span>
+          <input id="authEmail" type="email" autocomplete="email" placeholder="请输入邮箱" required>
+        </label>
+        <label class="field">
+          <span>密码</span>
+          <input id="authPassword" type="password" autocomplete="current-password" minlength="6" placeholder="至少 6 位密码" required>
+        </label>
+        <button class="button button-primary button-block" id="authSubmitBtn" type="submit">登录</button>
+      </form>
+
+      <button class="link-button" id="forgotPasswordBtn" type="button">忘记密码？发送重置邮件</button>
+      <p class="auth-tip">首次注册后，可能需要前往邮箱点击确认链接。</p>
+    </div>
+  </section>
+
+  <div class="app-shell hidden" id="appShell">
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">STORE CRM · CLOUD</p>
+        <h1>客情管家</h1>
+        <p class="subtitle">客户资料已连接云端，手机电脑自动同步</p>
+      </div>
+      <div class="topbar-actions">
+        <div class="sync-chip">
+          <span class="sync-dot"></span>
+          <span id="syncText">云端已同步</span>
+        </div>
+        <div class="account-menu">
+          <span id="userEmail">--</span>
+          <button class="link-button" id="logoutBtn" type="button">退出</button>
+        </div>
+        <button class="button button-secondary" id="exportBtn" type="button">导出 CSV</button>
+        <button class="button button-primary" id="goToFormBtn" type="button">+ 添加客户</button>
+      </div>
+    </header>
+
+    <main>
+      <section class="stats-grid" aria-label="客户数据统计">
+        <article class="stat-card">
+          <span class="stat-label">总客户数</span>
+          <strong class="stat-value" id="totalCount">0</strong>
+          <span class="stat-hint">全部客户档案</span>
+        </article>
+        <article class="stat-card accent-purple">
+          <span class="stat-label">高意向客户</span>
+          <strong class="stat-value" id="highIntentCount">0</strong>
+          <span class="stat-hint">建议优先沟通</span>
+        </article>
+        <article class="stat-card accent-blue">
+          <span class="stat-label">今日待跟进</span>
+          <strong class="stat-value" id="todayCount">0</strong>
+          <span class="stat-hint">今天需要联系</span>
+        </article>
+        <article class="stat-card accent-red">
+          <span class="stat-label">逾期未跟进</span>
+          <strong class="stat-value" id="overdueCount">0</strong>
+          <span class="stat-hint">请尽快处理</span>
+        </article>
+        <article class="stat-card accent-green">
+          <span class="stat-label">已成交</span>
+          <strong class="stat-value" id="wonCount">0</strong>
+          <span class="stat-hint">持续维护关系</span>
+        </article>
+        <article class="stat-card accent-gray">
+          <span class="stat-label">已流失</span>
+          <strong class="stat-value" id="lostCount">0</strong>
+          <span class="stat-hint">定期复盘原因</span>
+        </article>
+      </section>
+
+      <section class="focus-grid">
+        <article class="focus-panel today-panel">
+          <div class="panel-heading">
+            <div>
+              <p class="section-kicker">TODAY</p>
+              <h2>今日待跟进</h2>
+            </div>
+            <span class="count-badge blue" id="todayBadge">0 人</span>
+          </div>
+          <div class="follow-list" id="todayList"></div>
+        </article>
+
+        <article class="focus-panel overdue-panel">
+          <div class="panel-heading">
+            <div>
+              <p class="section-kicker">OVERDUE</p>
+              <h2>逾期未跟进</h2>
+            </div>
+            <span class="count-badge red" id="overdueBadge">0 人</span>
+          </div>
+          <div class="follow-list" id="overdueList"></div>
+        </article>
+      </section>
+
+      <section class="content-grid">
+        <article class="card form-card" id="customerFormSection">
+          <div class="section-heading">
+            <div>
+              <p class="section-kicker">CUSTOMER</p>
+              <h2 id="formTitle">添加客户</h2>
+              <p>保存后自动同步到云端</p>
+            </div>
+            <button class="link-button hidden" id="cancelEditBtn" type="button">取消编辑</button>
+          </div>
+
+          <form id="customerForm">
+            <input type="hidden" id="customerId">
+            <div class="form-grid">
+              <label class="field">
+                <span>客户姓名 <b>*</b></span>
+                <input id="name" type="text" placeholder="例如：王女士" maxlength="30" required>
+              </label>
+              <label class="field">
+                <span>电话 / 微信 <b>*</b></span>
+                <input id="contact" type="text" placeholder="手机号或微信号" maxlength="50" required>
+              </label>
+              <label class="field">
+                <span>客户来源</span>
+                <select id="source">
+                  <option>抖音</option><option>小红书</option><option>微信</option>
+                  <option>转介绍</option><option>到店</option><option>其他</option>
+                </select>
+              </label>
+              <label class="field">
+                <span>意向等级</span>
+                <select id="intent">
+                  <option>高</option><option selected>中</option><option>低</option>
+                </select>
+              </label>
+              <label class="field">
+                <span>客户顾虑</span>
+                <select id="concern">
+                  <option>价格</option><option>没时间</option><option selected>考虑中</option>
+                  <option>家人不同意</option><option>距离远</option><option>效果担心</option><option>其他</option>
+                </select>
+              </label>
+              <label class="field">
+                <span>当前状态</span>
+                <select id="status">
+                  <option selected>新客户</option><option>已沟通</option><option>待回访</option>
+                  <option>已成交</option><option>已流失</option>
+                </select>
+              </label>
+              <label class="field full-width">
+                <span>下次跟进日期</span>
+                <input id="followUpDate" type="date">
+              </label>
+              <label class="field full-width">
+                <span>备注</span>
+                <textarea id="notes" rows="4" maxlength="500" placeholder="记录客户需求、沟通重点等信息"></textarea>
+              </label>
+            </div>
+            <div class="form-actions">
+              <button class="button button-primary button-wide" id="submitBtn" type="submit">保存客户</button>
+              <button class="button button-ghost" id="resetBtn" type="button">清空</button>
+            </div>
+          </form>
+        </article>
+
+        <article class="card list-card">
+          <div class="section-heading">
+            <div>
+              <p class="section-kicker">CUSTOMER LIST</p>
+              <h2>客户列表</h2>
+              <p id="resultText">共 0 位客户</p>
+            </div>
+            <button class="link-button" id="refreshBtn" type="button">刷新数据</button>
+          </div>
+
+          <div class="filters">
+            <label class="search-box">
+              <span>⌕</span>
+              <input id="searchInput" type="search" placeholder="搜索姓名、电话、来源">
+            </label>
+            <select id="intentFilter" aria-label="按意向筛选">
+              <option value="">全部意向</option><option>高</option><option>中</option><option>低</option>
+            </select>
+            <select id="statusFilter" aria-label="按状态筛选">
+              <option value="">全部状态</option><option>新客户</option><option>已沟通</option>
+              <option>待回访</option><option>已成交</option><option>已流失</option>
+            </select>
+          </div>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>客户</th><th>来源</th><th>意向</th><th>顾虑</th>
+                  <th>状态</th><th>下次跟进</th><th>操作</th>
+                </tr>
+              </thead>
+              <tbody id="customerTableBody"></tbody>
+            </table>
+          </div>
+          <div class="empty-state hidden" id="tableEmptyState">
+            <div>◎</div>
+            <h3>还没有客户</h3>
+            <p>从左侧添加第一位客户吧</p>
+          </div>
+        </article>
+      </section>
+    </main>
+
+    <footer>
+      <span>客情管家云端版 · 登录账号后多设备同步</span>
+      <span>建议定期导出 CSV 备份</span>
+    </footer>
+  </div>
+
+  <div class="loading-layer hidden" id="loadingLayer"><div class="spinner"></div><span>正在连接云端…</span></div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="config.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
